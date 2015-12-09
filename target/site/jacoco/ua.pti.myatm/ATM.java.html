@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ATM.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MyATM</a> &gt; <a href="index.source.html" class="el_package">ua.pti.myatm</a> &gt; <span class="el_source">ATM.java</span></div><h1>ATM.java</h1><pre class="source lang-java linenums">package ua.pti.myatm;
+
+import javax.xml.bind.ValidationEvent;
+import java.io.IOException;
+
+public class ATM {
+    public double moneyInATM;
+    Card card;
+    int pinCode;
+    //Можно задавать количество денег в банкомате 
+<span class="fc" id="L11">    ATM(double moneyInATM){</span>
+<span class="fc" id="L12">        this.moneyInATM = moneyInATM;</span>
+<span class="fc" id="L13">    }</span>
+
+    // Возвращает каоличестов денег в банкомате
+    public double getMoneyInATM() {
+<span class="fc" id="L17">        return moneyInATM;</span>
+    }
+        
+    //С вызова данного метода начинается работа с картой
+    //Метод принимает карту и пин-код, проверяет пин-код карты и не заблокирована ли она
+    //Если неправильный пин-код или карточка заблокирована, возвращаем false. При этом, вызов всех последующих методов у ATM с данной картой должен генерировать исключение NoCardInserted
+    public boolean validateCard(Card card, int pinCode){
+<span class="pc bpc" id="L24" title="1 of 4 branches missed.">             if (card.isBlocked() || card.checkPin(pinCode) == false) {</span>
+<span class="fc" id="L25">                 return false;</span>
+             }
+                else{
+<span class="fc" id="L28">                 this.card = card;</span>
+<span class="fc" id="L29">                 this.pinCode = pinCode;</span>
+<span class="fc" id="L30">                 return  true;</span>
+             }
+    }
+    //throw new IllegalArgumentException (&quot;NoCardInserted&quot;);
+
+    //Возвращает сколько денег есть на счету
+    public double checkBalance(){
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if (validateCard(card, pinCode))</span>
+        {
+<span class="nc" id="L39">            Account account = card.getAccount();</span>
+<span class="nc" id="L40">            return account.getBalance();</span>
+
+        }
+<span class="nc" id="L43">        else throw new IllegalArgumentException (&quot;NoCardInserted&quot;);</span>
+    }
+    
+    //Метод для снятия указанной суммы
+    //Метод возвращает сумму, которая у клиента осталась на счету после снятия
+    //Кроме проверки счета, метод так же должен проверять достаточно ли денег в самом банкомате
+    //Если недостаточно денег на счете, то должно генерироваться исключение NotEnoughMoneyInAccount 
+    //Если недостаточно денег в банкомате, то должно генерироваться исключение NotEnoughMoneyInATM 
+    //При успешном снятии денег, указанная сумма должна списываться со счета, и в банкомате должно уменьшаться количество денег
+    public double getCash(double amount){
+<span class="nc bnc" id="L53" title="All 2 branches missed.">         if (validateCard(card, pinCode))</span>
+         {
+<span class="nc" id="L55">             Account account = card.getAccount();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">             if (account.getBalance() &lt; amount) throw new IllegalArgumentException(&quot;NotEnoughMoneyInAccount&quot;);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">             if (getMoneyInATM() &lt; amount) throw new IllegalArgumentException(&quot;NotEnoughMoneyInATM&quot;);</span>
+<span class="nc" id="L58">             account.withdrow(amount);</span>
+<span class="nc" id="L59">             this.moneyInATM -= amount;</span>
+<span class="nc" id="L60">             return account.getBalance();</span>
+         }
+<span class="nc" id="L62">        else throw new IllegalArgumentException (&quot;NoCardInserted&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.2.201409121644</span></div></body></html>
