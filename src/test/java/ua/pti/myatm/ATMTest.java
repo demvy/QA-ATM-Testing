@@ -9,6 +9,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+import org.omg.CORBA.OBJECT_NOT_EXIST;
 import ua.pti.myatm.exception.NoCardInsertedException;
 import ua.pti.myatm.exception.NotEnoughMoneyInATMException;
 import ua.pti.myatm.exception.NotEnoughMoneyInAccountException;
@@ -18,49 +20,6 @@ import ua.pti.myatm.exception.NotEnoughMoneyInAccountException;
  * @author andrii
  */
 public class ATMTest {
-    /*@Test
-    public void testGetMoneyInATM() {
-        System.out.println("getMoneyInATM");
-        ATM instance = null;
-        double expResult = 0.0;
-        double result = instance.getMoneyInATM();
-        assertEquals(expResult, result, 0.0);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    public void testValidateCard() {
-        System.out.println("validateCard");
-        Card card = null;
-        int pinCode = 0;
-        ATM instance = null;
-        boolean expResult = false;
-        boolean result = instance.validateCard(card, pinCode);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    public void testCheckBalance() {
-        System.out.println("checkBalance");
-        ATM instance = null;
-        double expResult = 0.0;
-        double result = instance.checkBalance();
-        assertEquals(expResult, result, 0.0);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    public void testGetCash() {
-        System.out.println("getCash");
-        double amount = 0.0;
-        ATM instance = null;
-        double expResult = 0.0;
-        double result = instance.getCash(amount);
-        assertEquals(expResult, result, 0.0);
-        fail("The test case is a prototype.");
-    }
-    */
 
     @Test
     public void testGetMoneyInATM(){
@@ -120,8 +79,15 @@ public class ATMTest {
 
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testSetCardIfCardIsNull() throws NoCardInsertedException, NullPointerException{
+        //Card card = mock(Card.class);
+        ATM instance = new ATM(100);
+        instance.setCard(null);
+    }
+
     @Test
-    public void testSetCardIfCardInside() throws NoCardInsertedException{
+    public void testSetCardIfCardInside() throws NoCardInsertedException,NullPointerException{
         Card card = mock(Card.class);
         ATM instance = new ATM(1000);
         instance.setCard(card);
@@ -143,7 +109,7 @@ public class ATMTest {
     }
 
     @Test(expected = NotEnoughMoneyInAccountException.class)
-    public void testGetCashIfAccountMoneyNotEnough() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException {
+    public void testGetCashIfAccountMoneyNotEnough() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException, IllegalArgumentException {
         Card card = mock(Card.class);
         Account account = mock(Account.class);
         double amount = 1000.0;
@@ -154,7 +120,7 @@ public class ATMTest {
     }
 
     @Test(expected = NotEnoughMoneyInATMException.class)
-    public void testGetCashIfATMMoneyNotEnough() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException {
+    public void testGetCashIfATMMoneyNotEnough() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException, IllegalArgumentException {
         Card card = mock(Card.class);
         Account account = mock(Account.class);
         ATM instance = new ATM(100.0);
@@ -171,7 +137,7 @@ public class ATMTest {
     }
 
     @Test(expected = NoCardInsertedException.class)
-    public void testGetCashIfCardNotInserted() throws NoCardInsertedException,NotEnoughMoneyInAccountException, NotEnoughMoneyInATMException{
+    public void testGetCashIfCardNotInserted() throws NoCardInsertedException,NotEnoughMoneyInAccountException, NotEnoughMoneyInATMException, IllegalArgumentException{
         Card card = mock(Card.class);
         ATM instance = new ATM(100.0);
         int pinCode = 1234;
@@ -182,7 +148,7 @@ public class ATMTest {
     }
 
     @Test
-    public void testGetCash() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException {
+    public void testGetCashRightAmountWitdrowsFromATM() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException,IllegalArgumentException {
         Card card = mock(Card.class);
         Account account = mock(Account.class);
         ATM instance = new ATM(1000.0);
@@ -190,9 +156,84 @@ public class ATMTest {
         when(card.getAccount()).thenReturn(account);
         when(account.getBalance()).thenReturn(1000.0);
         double amount = 200.0;
-        account.withdrow(amount);
-        assertEquals(account.getBalance(),instance.checkBalance(),0.0);
-        assertEquals(account.getBalance(),instance.getMoneyInATM(),0.0);
-        assertEquals(account.getBalance(), instance.getCash(amount), 0.0);
+        double before = instance.getMoneyInATM();
+        when(account.withdrow(amount)).thenReturn(amount);
+        instance.getCash(amount);
+        double after= instance.getMoneyInATM();
+        //assertEquals(account.getBalance(), instance.checkBalance(), 0.0);
+        //assertEquals(account.getBalance(), instance.getMoneyInATM(), 0.0);
+        //assertEquals(account.getBalance(), instance.getCash(amount), 0.0);
+        assertEquals(before-amount, after, 0.0);
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetCashIfAmountBelowZero() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException, IllegalArgumentException{
+        double amount = -100.0;
+        Card card = mock(Card.class);
+        Account account = mock(Account.class);
+        ATM instance = new ATM(1000.0);
+        instance.getCash(amount);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testATMIfMoneyBelowZero() throws IllegalArgumentException{
+        double moneyInATM = -100.0;
+        ATM instance = new ATM(moneyInATM);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testATMIfMoneyEqualsToZero() throws IllegalArgumentException{
+        double moneyInATM = 0.0;
+        ATM instance = new ATM(moneyInATM);
+    }
+
+    @Test
+    public void testATMIfMoneyAboveZero(){
+        double moneyInATM = 100.0;
+        ATM instance = new ATM(moneyInATM);
+        assertEquals(100.0, instance.getMoneyInATM(),0.0);
+    }
+
+    @Test//(expected = NullPointerException.class)
+    public void testCheckBalanceIsBlockedIsCalled() throws NoCardInsertedException{
+        Card card = mock(Card.class);
+        Account account = mock(Account.class);
+        ATM instance = new ATM(1000.0);
+        instance.setCard(card);
+        when(card.getAccount()).thenReturn(account);
+        instance.checkBalance();
+        assertEquals(account.getBalance(),instance.checkBalance(),0.0);
+        verify(card,atLeastOnce()).isBlocked();
+    }
+
+    @Test
+    public void testGetCashOrder() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException,IllegalArgumentException {
+        Card card = mock(Card.class);
+        Account account = mock(Account.class);
+        ATM instance = new ATM(1000.0);
+        double amount = 100.0;
+        instance.setCard(card);
+        when(card.getAccount()).thenReturn(account);
+        when(account.getBalance()).thenReturn(1000.0);
+        instance.getCash(amount);
+        InOrder order = inOrder(account);
+        order.verify(account, times(1)).withdrow(amount);
+        order.verify(account, atLeastOnce()).getBalance();
+    }
+
+    @Test
+    public void testWithdrowRightParametr() throws NoCardInsertedException,NotEnoughMoneyInAccountException,NotEnoughMoneyInATMException,IllegalArgumentException{
+        Card card = mock(Card.class);
+        Account account = mock(Account.class);
+        ATM instance = new ATM(1000.0);
+        double amount = 100.0;
+
+        when(card.getAccount()).thenReturn(account);
+        when(account.getBalance()).thenReturn(1000.0);
+        instance.setCard(card);
+        instance.getCash(amount);
+        verify(account, times(1)).withdrow(amount);
+    }
+
+
 }

@@ -10,15 +10,20 @@ public class ATM {
     private double moneyInATM;
     private Card card;
     //Можно задавать количество денег в банкомате
-    ATM(double moneyInATM){        this.moneyInATM = moneyInATM;
+    ATM(double moneyInATM) throws IllegalArgumentException{
+        if(moneyInATM <= 0) throw new IllegalArgumentException("money in ATM can't be less than a zero!");
+        else {
+            this.moneyInATM = moneyInATM;
+        }
     }
 
     // Возвращает каоличестов денег в банкомате
     public double getMoneyInATM() {
         return moneyInATM;
     }
-    public void setCard(Card card) throws NoCardInsertedException{
-            this.card = card;
+    public void setCard(Card card) throws NoCardInsertedException, NullPointerException{
+            if (card != null) this.card = card;
+            else throw new NullPointerException("Card is not entered!");
         //    return true;
         //}
         //else
@@ -60,12 +65,13 @@ public class ATM {
     //Если недостаточно денег в банкомате, то должно генерироваться исключение NotEnoughMoneyInATM 
     //При успешном снятии денег, указанная сумма должна списываться со счета, и в банкомате должно уменьшаться количество денег
     public double getCash(double amount) throws NotEnoughMoneyInATMException,NotEnoughMoneyInAccountException,NoCardInsertedException{
-        //if(amount<0)  throw new IllegalArgumentException("Wrong value!!!!Check amount you want to take off!");
-        setCard(this.card);
+        if(amount<0)  throw new IllegalArgumentException("Wrong value!!!!Check amount you want to take off!");
+        //setCard(this.card);
         Account account = this.card.getAccount();
         if (checkBalance() < amount) throw new NotEnoughMoneyInAccountException("You have not enough money at account");
         if (getMoneyInATM() < amount) throw new NotEnoughMoneyInATMException("There is not enough money in ATM");
         this.moneyInATM -= account.withdrow(amount);
         return account.getBalance();
     }
+
 }
